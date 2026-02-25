@@ -127,4 +127,21 @@ async def generate_number(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+
+    # Posit Workbench configuration
+    # This sets the correct root path for FastAPI in Workbench
+    path, port = '', 8000
+    if 'RS_SERVER_URL' in os.environ and os.environ['RS_SERVER_URL']:
+        import subprocess
+        path = subprocess.run(
+            f'echo $(/usr/lib/rstudio-server/bin/rserver-url -l {port})',
+            stdout=subprocess.PIPE,
+            shell=True
+        ).stdout.decode().strip()
+
+    print(f"Starting API server on port {port}")
+    if path:
+        print(f"Workbench root path: {path}")
+
+    uvicorn.run(app, host="0.0.0.0", root_path=path, port=port)
