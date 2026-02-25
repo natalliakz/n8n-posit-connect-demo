@@ -36,8 +36,24 @@ from pathlib import Path
 
 app = FastAPI(
     title="Clinical Trial Enrollment Prediction API",
-    description="ML-powered API for n8n Agentic Workflows - Posit Connect Deployment",
-    version="1.0"
+    description="An ML-powered API to predict clinical trial site enrollment success. Provides risk assessment and recommendations for trial site selection.",
+    version="1.0.0",
+    contact={
+        "name": "Posit Demo Team",
+        "email": "demo@posit.co"
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+    },
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "default",
+            "description": "ML prediction endpoints and service monitoring"
+        }
+    ]
 )
 
 # Load model artifacts
@@ -80,9 +96,9 @@ class RequestPayload(BaseModel):
     data: SitePredictionData
 
 
-@app.get("/")
+@app.get("/", tags=["default"], summary="API Information")
 async def root():
-    """Root endpoint with API information."""
+    """Returns basic information about the API including available endpoints and model status."""
     return {
         "message": "Clinical Trial Enrollment Prediction API for n8n Workflows",
         "version": "1.0",
@@ -95,9 +111,9 @@ async def root():
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=["default"], summary="Health Check")
 async def health():
-    """Health check endpoint."""
+    """Verify the API and ML model are loaded and responsive."""
     return {
         "status": "healthy" if model_loaded else "degraded",
         "model_loaded": model_loaded,
@@ -106,49 +122,13 @@ async def health():
     }
 
 
-@app.post("/model")
+@app.post("/model", tags=["default"], summary="Predict Enrollment Success")
 async def predict_enrollment(
     payload: RequestPayload,
     authorization: Optional[str] = Header(None)
 ):
     """
-    Predict enrollment success probability for a clinical trial site.
-
-    Returns Domino-compatible response format for n8n workflows.
-
-    Request body:
-        {
-            "data": {
-                "phase": "Phase II",
-                "therapeutic_area": "Oncology",
-                "country": "USA",
-                "site_type": "Academic Medical Center",
-                "investigator_experience_years": 15,
-                "site_staff_count": 20,
-                "prior_trials_completed": 25,
-                "patient_database_size": 15000,
-                "target_per_site": 75
-            }
-        }
-
-    Response format (Domino-compatible):
-        {
-            "release": {
-                "harness_version": "Posit Connect",
-                "model_version": "1.0",
-                "model_version_number": 1
-            },
-            "request_id": "connect-request",
-            "result": {
-                "success_probability": 0.94,
-                "prediction": "Success",
-                "risk_level": "Low",
-                "recommendation": "..."
-            },
-            "timing": {
-                "model_time_ms": 5.23
-            }
-        }
+    Predict the probability of successful patient enrollment for a clinical trial site based on site characteristics and trial parameters. Returns risk level and actionable recommendations.
     """
     start_time = time.time()
 
