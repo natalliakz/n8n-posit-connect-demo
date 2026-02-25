@@ -29,7 +29,7 @@ Example curl request:
 import time
 import joblib
 import numpy as np
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -98,9 +98,11 @@ class RequestPayload(BaseModel):
 
 
 @app.get("/", include_in_schema=False)
-async def root():
+async def root(request: Request):
     """Redirect to API documentation."""
-    return RedirectResponse(url="/docs")
+    # Use request.url to get the correct URL with root_path
+    docs_url = str(request.url).rstrip('/') + '/docs'
+    return RedirectResponse(url=docs_url)
 
 
 @app.get("/health", tags=["default"], summary="Health Check")
