@@ -17,6 +17,7 @@ Example curl request:
 import time
 import random
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from typing import Optional
 
@@ -111,21 +112,10 @@ class ModelResponse(BaseModel):
         }
 
 
-@app.get("/", tags=["default"], summary="API Information")
+@app.get("/", include_in_schema=False)
 async def root():
-    """
-    Returns basic information about the API including available endpoints.
-    """
-    return {
-        "message": "Random Number Generator API for n8n Workflows",
-        "version": "1.0",
-        "endpoints": {
-            "model": "/model (POST)",
-            "health": "/health (GET)",
-            "docs": "/docs (GET)"
-        },
-        "deployment": "Posit Connect"
-    }
+    """Redirect to API documentation."""
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health", tags=["default"], summary="Health Check")

@@ -30,6 +30,7 @@ import time
 import joblib
 import numpy as np
 from fastapi import FastAPI, HTTPException, Header
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from typing import Optional
 from pathlib import Path
@@ -96,19 +97,10 @@ class RequestPayload(BaseModel):
     data: SitePredictionData
 
 
-@app.get("/", tags=["default"], summary="API Information")
+@app.get("/", include_in_schema=False)
 async def root():
-    """Returns basic information about the API including available endpoints and model status."""
-    return {
-        "message": "Clinical Trial Enrollment Prediction API for n8n Workflows",
-        "version": "1.0",
-        "model_loaded": model_loaded,
-        "endpoints": {
-            "model": "/model (POST)",
-            "health": "/health (GET)"
-        },
-        "deployment": "Posit Connect"
-    }
+    """Redirect to API documentation."""
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health", tags=["default"], summary="Health Check")
