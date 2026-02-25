@@ -22,36 +22,140 @@ from typing import Optional
 
 app = FastAPI(
     title="Random Number Generator API",
-    description="Demo API for n8n Agentic Workflows - Posit Connect Deployment",
-    version="1.0"
+    description="""
+## n8n + Posit Connect Integration Demo
+
+This API demonstrates how Posit Connect can replace Domino for n8n agentic workflows.
+
+### Features
+* **Domino-Compatible Format**: Maintains exact response structure from Domino
+* **n8n Integration**: Drop-in replacement for existing workflows
+* **Simple Demo**: Random number generation for testing
+
+### Authentication
+Use API keys created in Posit Connect:
+```
+Authorization: Key YOUR_API_KEY
+```
+
+### Example Usage
+```bash
+curl -X POST /model \\
+  -H "Authorization: Key YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"data": {"min": 1, "max": 100}}'
+```
+    """,
+    version="1.0.0",
+    contact={
+        "name": "Posit Demo Team",
+        "email": "demo@posit.co"
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+    },
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Define the expected input schema (matching Domino pattern)
 class DataPayload(BaseModel):
-    min: int
-    max: int
+    """Input parameters for random number generation."""
+    min: int = 1
+    max: int = 100
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "min": 1,
+                "max": 100
+            }
+        }
 
 class RequestPayload(BaseModel):
+    """Domino-compatible request wrapper."""
     data: DataPayload
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "data": {
+                    "min": 1,
+                    "max": 100
+                }
+            }
+        }
 
-@app.get("/")
+# Response models for Swagger documentation
+class ReleaseInfo(BaseModel):
+    """Release and version information."""
+    harness_version: str = "Posit Connect"
+    model_version: str = "1.0"
+    model_version_number: int = 1
+
+class ResultData(BaseModel):
+    """Generated random number result."""
+    number: float
+
+class TimingInfo(BaseModel):
+    """Performance timing information."""
+    model_time_ms: float
+
+class ModelResponse(BaseModel):
+    """Complete API response matching Domino format."""
+    release: ReleaseInfo
+    request_id: str = "connect-request"
+    result: ResultData
+    timing: TimingInfo
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "release": {
+                    "harness_version": "Posit Connect",
+                    "model_version": "1.0",
+                    "model_version_number": 1
+                },
+                "request_id": "connect-request",
+                "result": {
+                    "number": 42.13
+                },
+                "timing": {
+                    "model_time_ms": 1.73
+                }
+            }
+        }
+
+
+@app.get("/", tags=["General"])
 async def root():
-    """Root endpoint with API information."""
+    """
+    **API Information**
+
+    Returns basic information about the API including available endpoints.
+    """
     return {
         "message": "Random Number Generator API for n8n Workflows",
         "version": "1.0",
         "endpoints": {
             "model": "/model (POST)",
-            "health": "/health (GET)"
+            "health": "/health (GET)",
+            "docs": "/docs (GET)"
         },
         "deployment": "Posit Connect"
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=["General"])
 async def health():
-    """Health check endpoint."""
+    """
+    **Health Check**
+
+    Verify the API is running and responsive.
+
+    Returns service status and platform information.
+    """
     return {
         "status": "healthy",
         "service": "random-number-generator",
@@ -59,25 +163,41 @@ async def health():
     }
 
 
-@app.post("/model")
+@app.post("/model", response_model=ModelResponse, tags=["Model"])
 async def generate_number(
     payload: RequestPayload,
     authorization: Optional[str] = Header(None)
 ):
     """
-    Generate a random number within the specified range.
+    **Generate Random Number**
 
-    Mimics Domino API response format for n8n compatibility.
+    Generate a random number within the specified range using uniform distribution.
 
-    Request body:
-        {
-            "data": {
-                "min": 1,
-                "max": 100
-            }
+    ### Domino Compatibility
+    This endpoint maintains the exact response format used by Domino APIs,
+    ensuring seamless migration of existing n8n workflows.
+
+    ### Parameters
+    - **min** (int): Minimum value for random number generation
+    - **max** (int): Maximum value for random number generation
+
+    ### Authentication
+    Optional API key in header:
+    ```
+    Authorization: Key YOUR_API_KEY
+    ```
+
+    ### Example Request
+    ```json
+    {
+        "data": {
+            "min": 1,
+            "max": 100
         }
+    }
+    ```
 
-    Response format (Domino-compatible):
+    ### Example Response
         {
             "release": {
                 "harness_version": "Posit Connect",
